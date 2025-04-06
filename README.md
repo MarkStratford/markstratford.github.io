@@ -10,8 +10,7 @@ Built with:
 
 ## Preview
 
-Live site: [https://yourusername.github.io/your-repo-name](https://yourusername.github.io/your-repo-name)  
-(Swap in your actual URL)
+Live site: [https://markhstratford.com](https://markhstratford.com)  
 
 ![Portfolio Screenshot](https://via.placeholder.com/1200x800.png?text=Site+Screenshot)
 
