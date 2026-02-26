@@ -14,6 +14,9 @@ const Navbar = () => {
       <Link to="/projects" className="hover:underline">
         Projects
       </Link>
+      <Link to="/rto-tracker" className="hover:underline text-indigo-400">
+        RTO Tracker
+      </Link>
     </nav>
   );
 };
