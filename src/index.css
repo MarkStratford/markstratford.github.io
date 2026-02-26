@@ -1,0 +1,34 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+/* RTO Tracker custom animations */
+@keyframes pulse-border {
+  0%, 100% { border-color: #f59e0b; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  50% { border-color: #fbbf24; box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+}
+
+.rto-sprint-pulse {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+@keyframes drop-warning {
+  0%, 100% { border-color: #ef4444; }
+  50% { border-color: #fca5a5; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+}
+
+.rto-drop-warning {
+  animation: drop-warning 1.5s ease-in-out infinite;
+}
+
+/* Smooth transitions for target toggle */
+.rto-transition {
+  transition: all 0.25s ease;
+}
