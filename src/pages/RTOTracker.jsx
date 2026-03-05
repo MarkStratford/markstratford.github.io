@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { computeCompliance, WINDOW_SIZE, BEST_N } from '../utils/rtoCompliance';
+import { computeCompliance, WINDOW_SIZE, BEST_N, isWindowAnchored } from '../utils/rtoCompliance';
 import { getMockData } from '../utils/rtoMockData';
 import WeekCard from '../components/rto/WeekCard';
 import ComplianceBanner from '../components/rto/ComplianceBanner';
@@ -176,25 +176,33 @@ function BestEightBar({ weeks }) {
             : 'bg-gray-600';
 
           return (
-            <div key={week.id} className="flex flex-col items-center flex-1 gap-0.5">
-              <span className="text-[9px] text-gray-400 leading-none">
-                {week.daysAttended}
-              </span>
-              <div
-                className={`w-full rounded-t transition-all ${barColor}`}
-                style={{ height: `${Math.max(4, pct)}%` }}
-              />
-              {rank === BEST_N - 1 && (
-                <div className="absolute -mt-1 w-px h-full border-l border-dashed border-yellow-500/50" />
+            <React.Fragment key={week.id}>
+              {rank === BEST_N && (
+                <div className="self-stretch w-px shrink-0 border-l border-dashed border-yellow-500/60" />
               )}
-            </div>
+              <div className="flex flex-col items-center flex-1 gap-0.5">
+                <span className="text-[9px] text-gray-400 leading-none">
+                  {week.daysAttended}
+                </span>
+                <div
+                  className={`w-full rounded-t transition-all ${barColor}`}
+                  style={{ height: `${Math.max(4, pct)}%` }}
+                />
+              </div>
+            </React.Fragment>
           );
         })}
       </div>
-      <div className="flex justify-between text-[9px] text-gray-500 mt-1">
-        <span>← Best weeks</span>
-        <span className="text-yellow-600/70">↑ Cut-off</span>
-        <span>Worst →</span>
+      {/* Footer labels: cut-off sits after bar BEST_N, i.e. at BEST_N/(WINDOW_SIZE) of the bar area */}
+      <div className="relative text-[9px] text-gray-500 mt-1 h-3">
+        <span className="absolute left-0">← Best weeks</span>
+        <span
+          className="absolute -translate-x-1/2 text-yellow-600/70"
+          style={{ left: `${(BEST_N / WINDOW_SIZE) * 100}%` }}
+        >
+          ↑ Cut-off
+        </span>
+        <span className="absolute right-0">Worst →</span>
       </div>
     </div>
   );
@@ -225,6 +233,8 @@ export default function RTOTracker() {
   const [weeks, setWeeks] = useState(() => getMockData());
   const [target, setTarget] = useState(20);
   const [editingWeek, setEditingWeek] = useState(null);
+
+  const anchored = useMemo(() => isWindowAnchored(), []);
 
   const compliance = useMemo(
     () => computeCompliance(weeks, target),
@@ -278,7 +288,7 @@ export default function RTOTracker() {
         />
 
         {/* ── Forecast panel ──────────────────────────────────────────── */}
-        <ForecastPanel compliance={compliance} />
+        <ForecastPanel compliance={compliance} isAnchored={anchored} />
 
         {/* ── Architecture note ───────────────────────────────────────── */}
         <ArchitectureNote />

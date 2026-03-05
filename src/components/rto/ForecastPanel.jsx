@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDateRange } from '../../utils/rtoCompliance';
+import { formatDateRange, MANDATE_START } from '../../utils/rtoCompliance';
 
 /**
  * ForecastPanel: explains the "so what" of the current compliance state.
@@ -9,12 +9,12 @@ import { formatDateRange } from '../../utils/rtoCompliance';
  *  2. Sprint Guide     – how many extra days this week to hit target
  *  3. Legend           – colour key for the week grid
  */
-export default function ForecastPanel({ compliance }) {
+export default function ForecastPanel({ compliance, isAnchored }) {
   const { dropOff, sprintScenarios, target, best8Total, daysNeeded } = compliance;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-      <DropOffCard dropOff={dropOff} target={target} best8Total={best8Total} />
+      <DropOffCard dropOff={dropOff} target={target} best8Total={best8Total} isAnchored={isAnchored} />
       <SprintCard sprintScenarios={sprintScenarios} daysNeeded={daysNeeded} target={target} />
     </div>
   );
@@ -22,10 +22,40 @@ export default function ForecastPanel({ compliance }) {
 
 // ── Drop-off card ──────────────────────────────────────────────────────────────
 
-function DropOffCard({ dropOff, target, best8Total }) {
+function DropOffCard({ dropOff, target, best8Total, isAnchored }) {
   if (!dropOff) return null;
-  const { week, wasCounting, projectedTotal, delta } = dropOff;
 
+  // During the first 12 weeks the window grows — nothing drops off yet
+  if (isAnchored) {
+    const rollingDate = new Date(MANDATE_START + 'T12:00:00');
+    rollingDate.setDate(rollingDate.getDate() + 12 * 7);
+    const rollingLabel = rollingDate.toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    });
+
+    return (
+      <div className="rounded-xl border-2 border-blue-700 bg-blue-900/20 p-4">
+        <div className="flex items-start gap-2 mb-3">
+          <span className="text-xl">📅</span>
+          <div>
+            <h3 className="font-bold text-white text-sm">Window Growing</h3>
+            <p className="text-xs text-gray-400">No weeks drop off yet</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-300 mb-3">
+          The 12-week window is anchored to{' '}
+          <strong className="text-blue-300">23 Feb 2026</strong> (mandate start). Each Monday a
+          new future week becomes active — nothing drops off until the window is full.
+        </p>
+        <div className="rounded-lg bg-blue-900/30 border border-blue-700/50 px-3 py-2 text-xs text-blue-200">
+          Rolling window begins <strong className="text-blue-100">{rollingLabel}</strong>. After
+          that, the oldest week drops off each Monday as normal.
+        </div>
+      </div>
+    );
+  }
+
+  const { week, wasCounting, projectedTotal, delta } = dropOff;
   const dateLabel = formatDateRange(week.startDate, week.endDate);
   const daysAfter = Math.max(0, target - projectedTotal);
 

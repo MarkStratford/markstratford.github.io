@@ -16,44 +16,30 @@
 import { generateRollingWindow } from './rtoCompliance';
 
 /**
- * Realistic scenario for today (2026-02-26, Thursday):
+ * Realistic scenario anchored to the mandate start (2026-02-23, Week 1).
+ * Today: 2026-03-04 (Wednesday), so we are in Week 2 of the mandate.
  *
- *  Window: 2025-12-08 (Mon) → 2026-02-27 (Fri)
+ *  Window: 2026-02-23 (Mon) → 2026-05-15 (Fri)   [first 12 weeks of mandate]
  *
- *  W01  Dec 08–12   3 days  ← COUNTING but drops off next Monday!
- *  W02  Dec 15–19   2 days  ← Dead Weight
- *  W03  Dec 22–26   1 day   ← Dead Weight (Christmas)
- *  W04  Dec 29–Jan2 1 day   ← Dead Weight (New Year)
- *  W05  Jan 05–09   2 days  ← Dead Weight
- *  W06  Jan 12–16   3 days  ← Counting
- *  W07  Jan 19–23   3 days  ← Counting
- *  W08  Jan 26–30   4 days  ← Counting (best week)
- *  W09  Feb 02–06   3 days  ← Counting
- *  W10  Feb 09–13   2 days  ← Dead Weight (borderline)
- *  W11  Feb 16–20   3 days  ← Counting
- *  W12  Feb 23–27   1 day   ← SPRINT (current week, 1 day in so far)
+ *  W01  Feb 23–27   3 days  ← COUNTING (completed)
+ *  W02  Mar 02–06   1 day   ← SPRINT (current week, Mon logged so far)
+ *  W03  Mar 09–13   0 days  ← FUTURE
+ *  W04  Mar 16–20   0 days  ← FUTURE
+ *  W05  Mar 23–27   0 days  ← FUTURE
+ *  W06  Mar 30–Apr3 0 days  ← FUTURE
+ *  W07  Apr 06–10   0 days  ← FUTURE
+ *  W08  Apr 13–17   0 days  ← FUTURE
+ *  W09  Apr 20–24   0 days  ← FUTURE
+ *  W10  Apr 27–May1 0 days  ← FUTURE
+ *  W11  May 04–08   0 days  ← FUTURE
+ *  W12  May 11–15   0 days  ← FUTURE
  *
- *  Best 8: W08(4) + W01(3)+W06(3)+W07(3)+W09(3)+W11(3) + W02(2)+W05(2) ... wait
- *  Let me recalculate properly in the engine.
- *
- *  Sorted: 4,3,3,3,3,3,2,2,2,1,1,1
- *  Best 8: 4+3+3+3+3+3+2+2 = 23
- *  Dead Weight: 2,1,1,1
- *
- *  For target 20 → COMPLIANT (23 ≥ 20)
- *  For target 24 → NEED 1 MORE DAY
- *
- *  Drop-off drama: W01 (3 days, COUNTING) drops off next Monday.
- *  After drop-off (assuming new week = 0 days):
- *    New Best 8: 4+3+3+3+3+2+2+2 = 22  (−1 day)
- *    For target 24 → NEED 2 MORE DAYS (got harder!)
- *
- *  Sprint: current week has 4 capacity remaining (Tue–Fri, 1 day logged Mon).
- *  Add 2 more days this week → W12=3 → Best 8 = 24 ✓
+ *  Best 8 so far: 3+1+0+0+0+0+0+0 = 4  (early days — window grows each week)
+ *  Rolling window begins: 2026-05-18 (after 12 weeks have elapsed)
  */
-const MOCK_ATTENDANCE = [3, 2, 1, 1, 2, 3, 3, 4, 3, 2, 3, 1];
-//                       ^W1                               W12^
-//                       oldest                          current
+const MOCK_ATTENDANCE = [3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+//                       ^W1 W2  W3→W12 (future)
+//                       oldest                          current+future
 
 export function getMockData(today = new Date()) {
   const weeks = generateRollingWindow(today);

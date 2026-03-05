@@ -9,6 +9,28 @@
 export const WINDOW_SIZE = 12;
 export const BEST_N = 8;
 
+/** The Monday the RTO mandate officially began. Week 1 is always anchored here. */
+export const MANDATE_START = '2026-02-23';
+
+/**
+ * Returns true while we are still within the first 12 weeks of the mandate.
+ * During this period the window grows week-by-week rather than dropping the oldest week.
+ */
+export function isWindowAnchored(today = new Date()) {
+  const d = new Date(today);
+  d.setHours(12, 0, 0, 0);
+  const dow = d.getDay();
+  const daysToMon = dow === 0 ? 6 : dow - 1;
+  const thisMonday = new Date(d);
+  thisMonday.setDate(d.getDate() - daysToMon);
+
+  const mandateMonday = new Date(MANDATE_START + 'T12:00:00');
+  const rollingStart = new Date(thisMonday);
+  rollingStart.setDate(thisMonday.getDate() - (WINDOW_SIZE - 1) * 7);
+
+  return mandateMonday > rollingStart;
+}
+
 /**
  * Week shape:
  * {
@@ -173,7 +195,13 @@ export function formatDateRange(startISO, endISO) {
 
 /**
  * Build a fresh 12-week rolling window anchored to `today`.
- * Week 1 = oldest (12 Mondays ago), Week 12 = current week.
+ *
+ * Week 1 is always the week of MANDATE_START (2026-02-23) for the first 12 weeks.
+ * Once 12 full weeks have elapsed from the mandate start, the window becomes a
+ * standard rolling window (oldest week drops off each Monday as usual).
+ *
+ * Future weeks (after the current week) are included to pad the array to 12 and
+ * are marked isFuture: true with daysAttended: 0.
  *
  * To add bank-holiday awareness: populate `maxDays` per week from an external
  * holiday calendar before calling `computeCompliance`.
@@ -195,12 +223,24 @@ export function generateRollingWindow(today = new Date()) {
     return `${y}-${m}-${day}`;
   };
 
+  const mandateMonday = new Date(MANDATE_START + 'T12:00:00');
+
+  // Rolling window would start here if there were no mandate anchor
+  const rollingStart = new Date(thisMonday);
+  rollingStart.setDate(thisMonday.getDate() - (WINDOW_SIZE - 1) * 7);
+
+  // Use the mandate start as week 1 until the rolling window overtakes it
+  const windowStart = mandateMonday > rollingStart ? mandateMonday : rollingStart;
+
   const weeks = [];
-  for (let i = WINDOW_SIZE - 1; i >= 0; i--) {
-    const start = new Date(thisMonday);
-    start.setDate(thisMonday.getDate() - i * 7);
+  for (let i = 0; i < WINDOW_SIZE; i++) {
+    const start = new Date(windowStart);
+    start.setDate(windowStart.getDate() + i * 7);
     const end = new Date(start);
     end.setDate(start.getDate() + 4); // Friday
+
+    const isFuture = start > thisMonday;
+    const isCurrent = toISO(start) === toISO(thisMonday);
 
     weeks.push({
       id: toISO(start),
@@ -208,9 +248,9 @@ export function generateRollingWindow(today = new Date()) {
       endDate: toISO(end),
       daysAttended: 0,
       maxDays: 5,
-      isCurrent: i === 0,
-      isFuture: false,
-      windowPosition: WINDOW_SIZE - i, // 1 = oldest, 12 = current
+      isCurrent,
+      isFuture,
+      windowPosition: i + 1, // 1 = oldest (mandate start), 12 = newest
     });
   }
 
